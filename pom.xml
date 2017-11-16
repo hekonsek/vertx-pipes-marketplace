@@ -228,8 +228,8 @@
 
     <!-- Required by Sonatype release -->
 
-    <description>vertx-pipes</description>
-    <url>https://github.com/hekonsek/vertx-pipes</url>
+    <description>vertx-pipes-marketplace</description>
+    <url>https://github.com/hekonsek/vertx-pipes-marketplace</url>
 
     <developers>
         <developer>
@@ -239,9 +239,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git@github.com:hekonsek/vertx-pipes.git</connection>
-        <developerConnection>scm:git:git@github.com:hekonsek/vertx-pipes.git</developerConnection>
-        <url>git@github.com:hekonsek/vertx-pipes.git</url>
+        <connection>scm:git:git@github.com:hekonsek/vertx-pipes-marketplace.git</connection>
+        <developerConnection>scm:git:git@github.com:hekonsek/vertx-pipes-marketplace.git</developerConnection>
+        <url>git@github.com:hekonsek/vertx-pipes-marketplace.git</url>
         <tag>HEAD</tag>
     </scm>
 
