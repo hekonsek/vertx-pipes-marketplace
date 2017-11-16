@@ -1,4 +1,4 @@
-# Licensed to the vertx-pipes project under one or more
+# Licensed to the vertx-pipes-marketplace project under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
 # The licenses this file to You under the Apache License, Version 2.0
@@ -21,7 +21,7 @@ OLD_VERSION="${1}"
 NEW_VERSION="${2}"
 
 if [ -z "${OLD_VERSION}" ] || [ -z "${NEW_VERSION}" ]; then
-    echo 'Please specify the latest and the new version of vertx-pipes. For example:'
+    echo 'Please specify the latest and the new version of vertx-pipes-marketplace. For example:'
     echo
     echo '  release.sh 0.0.5 0.0.6'
     exit

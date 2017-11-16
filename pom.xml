@@ -28,8 +28,9 @@
         <!-- Dependencies versions -->
         <debezium.version>0.5.1</debezium.version>
         <elasticsearch.version>6.0.0</elasticsearch.version>
+        <junit.version>4.12</junit.version>
         <vertx.version>3.5.0</vertx.version>
-        <vertx-pipes.version>0.3</vertx-pipes.version>
+        <vertx-pipes.version>0.4</vertx-pipes.version>
 
         <!-- Plugins versions -->
         <maven-enforcer-plugin.version>3.0.0-M1</maven-enforcer-plugin.version>
@@ -45,6 +46,11 @@
                 <groupId>com.github.hekonsek</groupId>
                 <artifactId>vertx-pipes</artifactId>
                 <version>${vertx-pipes.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${junit.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.elasticsearch.client</groupId>
