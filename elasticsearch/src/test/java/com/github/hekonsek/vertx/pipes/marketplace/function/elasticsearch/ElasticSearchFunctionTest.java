@@ -12,6 +12,8 @@ import org.apache.kafka.common.utils.Bytes;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
+import org.elasticsearch.index.IndexNotFoundException;
+import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.junit.Test;
 
@@ -36,27 +38,61 @@ public class ElasticSearchFunctionTest {
         }
     }
 
+    String index = UUID.randomUUID().toString();
+
+    String type = "type";
+
+    // Tests
+
     @Test
-    public void shouldPersistEvent() throws InterruptedException {
-        String index = UUID.randomUUID().toString();
-        String type = "type";
+    public void shouldPersistEvent() {
         SimpleFunctionRegistry functionRegistry = new SimpleFunctionRegistry();
         ElasticSearchFunction elasticSearchFunction = new ElasticSearchFunction().targetType(event -> index + "/" + type);
         functionRegistry.registerFunction("elasticsearch", elasticSearchFunction);
 
         Pipe pipe = pipe("elasticsearch", UUID.randomUUID().toString(), "elasticsearch");
-        pipes(Vertx.vertx(), functionRegistry).startPipe(pipe);
-
-        Map<String, Object> event = ImmutableMap.of("foo", "bar");
-        pipeProducer(Vertx.vertx()).write(new KafkaProducerRecordImpl<>(pipe.getSource(), "key", new Bytes(Json.encode(event).getBytes())));
+        pipes(Vertx.vertx(), functionRegistry).startPipe(pipe, done -> {
+            Map<String, Object> event = ImmutableMap.of("foo", "bar");
+            pipeProducer(Vertx.vertx()).write(new KafkaProducerRecordImpl<>(pipe.getSource(), "key", new Bytes(Json.encode(event).getBytes())));
+        });
 
         Settings settings = Settings.builder().put("cluster.name", "default").build();
         TransportClient client = new PreBuiltTransportClient(settings).addTransportAddress(new TransportAddress(new InetSocketAddress("localhost", 9300)));
 
-        Thread.sleep(2000);
         await().untilAsserted(() -> {
-            Map<String, Object> savedEvent = client.prepareSearch(index).setTypes(type).get().getHits().getAt(0).getSourceAsMap();
-            assertThat(savedEvent).isEqualTo(event);
+            try {
+                Map<String, Object> savedEvent = client.prepareSearch(index).setTypes(type).get().getHits().getAt(0).getSourceAsMap();
+                assertThat(savedEvent).isEqualTo(ImmutableMap.of("foo", "bar"));
+            } catch (IndexNotFoundException e) {
+            }
+        });
+    }
+
+    @Test
+    public void shouldUpdateEntity() {
+        SimpleFunctionRegistry functionRegistry = new SimpleFunctionRegistry();
+        ElasticSearchFunction elasticSearchFunction = new ElasticSearchFunction().targetType(event -> index + "/" + type);
+        functionRegistry.registerFunction("elasticsearch", elasticSearchFunction);
+
+        Pipe pipe = pipe("elasticsearch", UUID.randomUUID().toString(), "elasticsearch");
+        pipes(Vertx.vertx(), functionRegistry).startPipe(pipe, done -> {
+            Map<String, Object> event = ImmutableMap.of("foo", "bar");
+            pipeProducer(Vertx.vertx()).write(new KafkaProducerRecordImpl<>(pipe.getSource(), "key", new Bytes(Json.encode(event).getBytes())));
+            event = ImmutableMap.of("foo", "updated");
+            pipeProducer(Vertx.vertx()).write(new KafkaProducerRecordImpl<>(pipe.getSource(), "key", new Bytes(Json.encode(event).getBytes())));
+        });
+
+        Settings settings = Settings.builder().put("cluster.name", "default").build();
+        TransportClient client = new PreBuiltTransportClient(settings).addTransportAddress(new TransportAddress(new InetSocketAddress("localhost", 9300)));
+
+        await().untilAsserted(() -> {
+            try {
+                SearchHits hits = client.prepareSearch(index).setTypes(type).get().getHits();
+                assertThat(hits).hasSize(1);
+                Map<String, Object> savedEvent = hits.getAt(0).getSourceAsMap();
+                assertThat(savedEvent).isEqualTo(ImmutableMap.of("foo", "updated"));
+            } catch (IndexNotFoundException e) {
+            }
         });
     }
 

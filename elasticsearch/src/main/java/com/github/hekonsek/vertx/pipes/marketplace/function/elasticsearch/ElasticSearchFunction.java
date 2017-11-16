@@ -1,13 +1,12 @@
 package com.github.hekonsek.vertx.pipes.marketplace.function.elasticsearch;
 
 import com.github.hekonsek.vertx.pipes.EventExpression;
-import com.github.hekonsek.vertx.pipes.Function;
 import com.github.hekonsek.vertx.pipes.StartableFunction;
 import io.vertx.core.eventbus.Message;
+import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
 import java.net.InetSocketAddress;
@@ -18,8 +17,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
+import static com.github.hekonsek.vertx.pipes.Pipes.HEADER_KEY;
 import static io.vertx.core.json.Json.encode;
 import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.elasticsearch.common.xcontent.XContentType.JSON;
 
 public class ElasticSearchFunction implements StartableFunction {
 
@@ -28,6 +30,8 @@ public class ElasticSearchFunction implements StartableFunction {
     private List<String> dateFields = emptyList();
 
     private EventExpression<String> targetType;
+
+    // Internal collaborators
 
     private TransportClient client;
 
@@ -43,13 +47,18 @@ public class ElasticSearchFunction implements StartableFunction {
     }
 
     @Override public void handle(Message<Map<String, Object>> event) {
-        dateFields.forEach( field -> {
-            event.body().put(field, dateFormat.format(new Date((Long) event.body().get(field))));
-        });
+        String key = event.headers().get(HEADER_KEY);
+        dateFields.forEach(field ->
+                event.body().put(field, dateFormat.format(new Date((Long) event.body().get(field))))
+        );
         String json = encode(event.body());
         String targetType = this.targetType.evaluate(event);
         String[] targetTypeElements = targetType.split("/");
-        client.prepareIndex(targetTypeElements[0], targetTypeElements[1]).setSource(json, XContentType.JSON).get();
+        IndexRequestBuilder indexRequest =client.prepareIndex(targetTypeElements[0], targetTypeElements[1]).setSource(json, JSON);
+        if(isNotBlank(key)) {
+            indexRequest.setId(key);
+        }
+        indexRequest.get();
     }
 
     public ElasticSearchFunction clusterName(String clusterName) {

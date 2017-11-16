@@ -14,24 +14,22 @@
         <artifactId>vertx-pipes-marketplace</artifactId>
         <version>0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>vertx-pipes-function-elastisearch</artifactId>
+    <artifactId>vertx-pipes-function-elasticsearch</artifactId>
     <name>${project.artifactId}</name>
-
-    <properties>
-        <debezium.version>0.5.1</debezium.version>
-    </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.github.hekonsek</groupId>
             <artifactId>vertx-pipes</artifactId>
-            <version>0.2</version>
         </dependency>
-
         <dependency>
             <groupId>org.elasticsearch.client</groupId>
             <artifactId>transport</artifactId>
-            <version>6.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.6</version>
         </dependency>
 
         <!-- Testing -->
